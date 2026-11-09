@@ -1,2 +1,13 @@
 //@version=6
-indicator("HTF SUITE", overlay=true, max_bars_back=5000, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+indicator("mbel po3", overlay=true, max_bars_back=5000, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+// ============================================================
+// 01. INPUT GROUP
+// ============================================================
+
+string G_MAIN = "01. Main Settings"
+string G_HTF  = "02. HTF Candles"
+string G_SMT  = "03. SMT Divergence"
+string G_PSP  = "04. PSP Detection"
+string G_HUD  = "05. Smart HUD"
+string G_UI   = "06. Visual Settings"
