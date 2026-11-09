@@ -4,10 +4,18 @@ indicator("mbel po3", overlay=true, max_bars_back=5000, max_lines_count=500, max
 // ============================================================
 // Grups
 // ============================================================
-
-gGlobal= "01. Main Settings"
-string G_HTF  = "02. HTF Candles"
-string G_SMT  = "03. SMT Divergence"
-string G_PSP  = "04. PSP Detection"
-string G_HUD  = "05. Smart HUD"
-string G_UI   = "06. Visual Settings"
+gGlobal = "1. Global Settings ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gHTF = "2. HTF Settings ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gHTFSmtPspFvg = "3. HTF Features ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gHTFSetings = "4. General Settings ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gCISD = "5. CISD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+g_smt = "SMT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+g_smt_gates = "SMT Gates Settings"
+g_smt_ranks = "SMT Render Settings"
+g_smt_styling = "SMT Syling Settings"
+gHTFSMT = "HTF SMTs"
+g_smt_assets = "SMT Asset Pair Resolver Settings"
+g8 = "7. SMT-FILL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gKeyLevels = "8. Key Levels ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gstable = "9. Status Table ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+gPerformance = "10. Performance  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
