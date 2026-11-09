@@ -19,3 +19,26 @@ g8 = "7. SMT-FILL ━━━━━━━━━━━━━━━━━━━━�
 gKeyLevels = "8. Key Levels ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 gstable = "9. Status Table ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 gPerformance = "10. Performance  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+
+//==============================================================================
+// Inputs
+//==============================================================================
+
+global_text_color = input.color(#2e2e2e, 'Global Text Color', inline='gtxt', group = gGlobal)
+global_mono_font = input.bool(false, 'Monospaced Font?', group = gGlobal)
+global_font_family = global_mono_font ? font.family_monospace : font.family_default
+bias_mode = input.string('Auto + Unbiased SMTs', 'Bias Engine', options = ['Off', 'Auto', 'Auto + Unbiased SMTs', 'Bullish', 'Bearish'], group = gGlobal)
+bias_unbiased_smt = bias_mode == 'Auto + Unbiased SMTs'
+bias_auto_mode = bias_mode == 'Auto' or bias_unbiased_smt
+bias_off_mode = bias_mode == 'Off'
+bias_bull_mode = bias_mode == 'Bullish'
+bias_bear_mode = bias_mode == 'Bearish'
+htf_sweeps_display = input.string('HTF Pane + Main', 'Sweep Display', options = ['HTF Pane Only', 'Main Chart Only', 'HTF Pane + Main'], group = gGlobal)
+
+htf_sweep_color = input.color(#636363, 'Sweeps', inline='sweep', group=gGlobal)
+htf_sweep_line_style = input.string('___', '', options=['___', '----', '....'], inline='sweep', group=gGlobal)
+htf_sweep_display_cap = input.int(1, '', minval=1, maxval=25, inline='sweep', group=gGlobal, tooltip='Maximum displayed sweeps per HTF pane and direction. The latest valid confirmed formation reserves one slot; pending sweeps use only remaining slots. Detection history is independent of this display cap.')
+htf_c3_closure = input.bool(false, 'C3 Closure Sweeps', inline='c3closure', group=gGlobal, tooltip='A failed C2 recovers only when C3 closes above C1 high (bullish) or below C1 low (bearish). Equal closes and wick-only breaches do not qualify. No pending C3 recovery is displayed.')
+htf_c3_bull_color = input.color(#0096ff, '', inline='c3closure', group=gGlobal, active=htf_c3_closure)
+htf_c3_bear_color = input.color(#f7525f, '', inline='c3closure', group=gGlobal, active=htf_c3_closure)
