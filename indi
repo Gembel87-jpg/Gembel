@@ -3,9 +3,9 @@ indicator('⚡ PO3 PRO + | JayTrades', shorttitle="⚡ PO3 PRO + | JayTrades", o
 
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/rj943jay
 
-// ══════════════════════════════════════════════════════════════
-// ⚙️ UI SETTINGS & INPUT GROUPS (ORDERED SEQUENCE)
-// ═
+// ═══════════════════════════════════════════════════════════
+// ⚙️ PENGATURAN UI & GRUP INPUT (URUTAN TERURUT)
+// ═══════════════════════════════════════════════════════════
 
 // --- 1. BIAS ---
 string g_bias = "⚖️ Bias ━━━━━━━━━━━━━━━━━━━━━━━━"
