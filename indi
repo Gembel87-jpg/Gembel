@@ -6,3 +6,264 @@ indicator('⚡ PO3 PRO + | JayTrades', shorttitle="⚡ PO3 PRO + | JayTrades", o
 // ══════════════════════════════════════════════════════════════
 // ⚙️ UI SETTINGS & INPUT GROUPS (ORDERED SEQUENCE)
 // ═
+
+// --- 1. BIAS ---
+string g_bias = "⚖️ Bias ━━━━━━━━━━━━━━━━━━━━━━━━"
+i_global_bias = input.string("Follow Profile", "Smart Sync Bias Mode", options=["Follow Profile", "Bullish", "Bearish", "Neutral"], group=g_bias, tooltip="Follow Profile secara otomatis mendeteksi bias dari C2 terbaru dari HTF tertinggi.")
+// Types - Data Only (no drawing objects stored)
+type Candle
+    float o
+    float c
+    float h
+    float l
+    int o_time
+    int c_time    // close time - set when next candle opens
+    int o_idx
+    int c_idx
+    int h_idx
+    int l_idx
+    string dow
+    // Visual positions (calculated during draw)
+    int candle_left
+    int candle_right
+    int wick_x
+    // HTF panel SMT / PSP flags (recomputed on the last bar)
+    bool smt_bull = false
+    bool smt_bear = false
+    bool psp = false       // body closes opposite in colour to the pair 1 candle
+// One pair candle aligned to an HTF panel candle (same open time) — HTF Profiler HtfPairCandle
+type HtfPairCandle
+    float o
+    float h
+    float l
+    float c
+    int   ot
+type Trace
+    int start_idx
+    float start_price
+type Sweep
+    float price
+    int ltf_index
+    int htf_candle_idx
+    int swept_candle_idx
+    int ltf_end_idx
+    bool is_high  // true = high sweep, false = low sweep
+// Completed IC-CISD (confirmed only)
+type ICCisd
+    float level
+    int start_idx
+    int end_idx
+    float extreme_price
+    int extreme_idx
+    bool taken               // wick beyond swing high/low — line and dot go grey
+    bool is_bull = false     // direction of the owning setup
+    int taken_bar = na       // bar the dot was taken (removed IC_GREY_BARS later)
+    bool visible = false     // true once the owning setup's main CISD has triggered
+    bool removed = false     // owning setup's CISD was rebuilt — drop this IC
+    int start_time = na      // time coordinates: persistent ICs can be thousands of bars old,
+    int end_time = na        // beyond the bar_index drawing limit, so they are drawn by time
+    int extreme_time = na
+type Setup
+    bool is_bullish          // true = bullish setup (low sweep), false = bearish (high sweep)
+    bool is_confirmed        // true when sweep is confirmed (close in range)
+    bool is_post_c2          // true after C2 closes, waiting for CISD
+    // Sweep data
+    float sweep_price        // swept high/low price (C1 high/low)
+    int sweep_ltf_idx        // LTF bar index of sweep
+    int sweep_bar_idx        // bar index where sweep happened (for CISD traceback)
+    int swept_candle_idx     // HTF candle that was swept (o_idx)
+    int htf_candle_idx       // HTF candle that did the sweeping
+    int ltf_end_idx          // LTF end point for sweep line
+    int htf_count            // counts HTF candles since sweep (max 2)
+    // C2 data
+    int c2_x                 // bar index for C2 label (at swing point)
+    float c2_y               // price for C2 label (swing high/low)
+    float c2_extreme         // C2's high (bearish) or low (bullish) for price limit
+    // CISD data
+    float cisd_level         // CISD price level (open of opposing candles)
+    int cisd_start_idx       // bar index where CISD level starts
+    int cisd_end_idx         // body-break bar; line drawn to this + 1
+    float tracked_extreme    // tracks high/low price for CISD (lowest low or highest high)
+    int extreme_bar_idx      // bar index where the extreme occurred (for CISD traceback)
+    bool has_cisd            // true when CISD level is set
+    bool cisd_triggered      // true when CISD may show (body broke; in C2 also needs sweep back in)
+    // IC-CISD (rebuild): opposite-candle open = level; body break confirms; one pending
+    array<ICCisd> ic_list
+    bool ic_active           // detection on after main CISD (through C4)
+    bool ic_pending          // waiting for body break on current structure
+    float ic_level           // open of opposite candle
+    int ic_start_idx         // bar of that opposite candle
+    float ic_extreme         // running high (bear) / low (bull) for dot — update every bar until confirm
+    int ic_extreme_idx
+    bool ic_seen_same_side   // true only after a real same-side candle (not doji) while pending
+    float ic_last_extreme    // last confirmed IC swing extreme — next arm only if exceeds this (higher high / lower low)
+    // C4 window
+    int liq_end_time         // C4's end time (gates C4 invalidation)
+    // Invalidation
+    bool is_invalid          // True if C3 exceeded C2 extreme after CISD triggered
+    // Entry Zone C3 data
+    float c2_mid             // C2 wick midpoint (high+low)/2
+    float c3_open            // C3 open price
+    bool ez_c3_set           // true when C3 entry zone bounds are calculated
+    float ez_c3_top          // C3 zone top price
+    float ez_c3_bot          // C3 zone bottom price
+    int ez_c3_left_time      // C3 zone left (C3 open time)
+    int ez_c3_right_time     // C3 zone right (C3 close / C4 open); na while C3 is live
+    // Entry Zone C4 data
+    float c3_mid             // C3 wick midpoint (high+low)/2
+    float c3_extreme         // C3 high (bearish) or low (bullish) for C4 invalidation
+    float c4_open            // C4 open price
+    bool ez_c4_set           // true when C4 entry zone bounds are calculated
+    bool ez_c4_invalid       // true when C4 invalidated (beyond C3 extreme)
+    int ez_c4_invalid_time   // LTF time where C4 was invalidated (EQ stops here)
+    float ez_c4_top          // C4 zone top price
+    float ez_c4_bot          // C4 zone bottom price
+    int ez_c4_left_time      // C4 zone left (C4 open time)
+    int ez_c4_right_time     // C4 zone right (C4 close)
+// Liquidity Suite — Sessions (Asia / London / New York / NY PM)
+type kz
+    string _title
+    array<box> _box
+    array<line> _hi_line
+    array<line> _lo_line
+    array<label> _hi_label
+    array<label> _lo_label
+    array<bool> _hi_valid
+    array<bool> _lo_valid
+    bool _created = false
+    int _created_day = na
+type kz_helper
+    kz _kz
+    string session
+    string tz
+    color c
+    string hi_txt
+    string lo_txt
+type CandleSettings
+    string htf
+    int max_display
+    bool vt_show
+    color vt_color
+    string vt_style
+    int vt_size
+    bool hl_show
+    color hl_color
+    string hl_style
+    int hl_width
+type Settings
+    color bull_body
+    color bull_border
+    color bull_wick
+    color bear_body
+    color bear_border
+    color bear_wick
+    int offset
+    int width
+    bool daily_name
+    bool trace_show
+    color trace_o_color
+    string trace_o_style
+    int trace_o_size
+    bool label_show
+    color label_color
+    string label_size
+    string label_position
+    string dow_position
+    bool htf_label_show
+    color htf_label_color
+    string htf_label_size
+    bool htf_timer_show
+    color htf_timer_color
+    string htf_timer_size
+    color dow_color
+    string dow_size
+    bool sweep_show
+    color sweep_color
+    string sweep_style
+    int sweep_size
+    int sweep_history
+    bool sweep_visible_only
+    bool sweep_live
+    color c2_color
+    string c2_size
+    bool show_c2_lbl
+    bool show_c3_lbl
+    bool show_c4_lbl
+    // CISD settings
+    bool cisd_show
+    color cisd_bull_color
+    color cisd_bear_color
+    int cisd_width
+    string cisd_style
+    bool ic_cisd_show        // IC-CISD toggle (same colors/width/style as CISD)
+    string ic_dot_size       // IC-CISD swing dot size
+    // Early/Live CISD preview settings
+    bool early_cisd_show
+    color early_cisd_color
+    string early_cisd_style
+    // Entry Zone settings
+    bool entry_zone_show
+    color entry_zone_bull_color
+    color entry_zone_bear_color
+    // General settings
+    string bias
+    bool hide_candles
+    bool hide_setups
+    bool model_on_panel      // Fractal model drawn on a panel this bar (set on the last bar)
+type CandleSet
+    array<Candle> candles
+    array<Sweep> sweeps
+    array<Setup> setups       // completed setups for history
+    CandleSettings settings
+    Trace trace
+    Setup live_bearish        // tracks when high is wicked (potential bearish setup)
+    Setup live_bullish        // tracks when low is wicked (potential bullish setup)
+    bool has_live_bearish     // flag for bearish tracking active
+    bool has_live_bullish     // flag for bullish tracking active
+// Drawing Bin - centralized storage for all drawing objects
+type DrawingBin
+    array<line> lines
+    array<box> boxes
+    array<label> labels
+// HTF FVG box (versi ringan)
+type PoiFVG
+    box fvg_box
+    float top
+    float bottom
+    bool is_bullish
+    line midline = na
+    label fvg_label = na
+var Settings settings = Settings.new()
+var CandleSettings Settingshtf = CandleSettings.new()
+var array<Candle> candles_1 = array.new<Candle>(0)
+var array<Sweep> sweeps_1 = array.new<Sweep>()
+var array<Setup> setups_1 = array.new<Setup>()
+// ── FVG state (chart-level HTF FVG) ──
+var array<PoiFVG> fvg_list = array.new<PoiFVG>()
+var CandleSet htf = CandleSet.new()
+htf.settings := Settingshtf
+htf.candles := candles_1
+htf.sweeps := sweeps_1
+htf.setups := setups_1
+if na(htf.trace)
+    htf.trace := Trace.new()
+// ── HTF panel preview candles (Profiler Classic ladder) — preview only, never feed C2/CISD/setups ──
+var array<Candle> pnl_a1 = array.new<Candle>()
+var array<Candle> pnl_a2 = array.new<Candle>()
+var array<Candle> pnl_a3 = array.new<Candle>()
+// Pair candles per panel (0 = Fractal model panel, 1..3 = HTF1..HTF3) × (pair 1, pair 2)
+var array<HtfPairCandle> pp0_1 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp0_2 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp1_1 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp1_2 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp2_1 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp2_2 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp3_1 = array.new<HtfPairCandle>()
+var array<HtfPairCandle> pp3_2 = array.new<HtfPairCandle>()
+// Initialize drawing bin
+var DrawingBin bin = DrawingBin.new(
+    lines = array.new<line>(),
+    boxes = array.new<box>(),
+    labels = array.new<label>()
+)
+color color_transparent = #ffffff00
