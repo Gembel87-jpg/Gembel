@@ -267,3 +267,5 @@ var DrawingBin bin = DrawingBin.new(
     labels = array.new<label>()
 )
 color color_transparent = #ffffff00
+
+// --- 2. PROFIL / KERANGKA WAKTU HTF ---
