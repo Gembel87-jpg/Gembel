@@ -2,3 +2,7 @@
 indicator('⚡ PO3 PRO + | JayTrades', shorttitle="⚡ PO3 PRO + | JayTrades", overlay = true, max_boxes_count = 500, max_lines_count = 500, max_labels_count = 500, max_bars_back = 3000)
 
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/rj943jay
+
+// ══════════════════════════════════════════════════════════════
+// ⚙️ UI SETTINGS & INPUT GROUPS (ORDERED SEQUENCE)
+// ═
